@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'dart:html' as html;
 
 import '../impl.dart';
+import 'package:collection/collection.dart' show IterableExtension;
 
 class DirUtils implements LocalStorageImpl {
-  final String path, fileName;
+  final String fileName;
+  final String? path;
 
   DirUtils(this.fileName, [this.path]);
   html.Storage get localStorage => html.window.localStorage;
@@ -17,7 +19,7 @@ class DirUtils implements LocalStorageImpl {
   @override
   Future<void> clear() async {
     localStorage.remove(fileName);
-    storage.add(null);
+    storage.add({});
     _data.clear();
   }
 
@@ -28,7 +30,7 @@ class DirUtils implements LocalStorageImpl {
 
   @override
   Future<bool> exists() async {
-    return localStorage != null && localStorage.containsKey(fileName);
+    return localStorage.containsKey(fileName);
   }
 
   @override
@@ -42,7 +44,7 @@ class DirUtils implements LocalStorageImpl {
   }
 
   @override
-  Future<void> init([Map<String, dynamic> initialData]) async {
+  Future<void> init([Map<String, dynamic>? initialData]) async {
     _data = initialData ?? {};
     if (await exists()) {
       await _readFromStorage();
@@ -76,9 +78,8 @@ class DirUtils implements LocalStorageImpl {
   }
 
   Future<void> _readFromStorage() async {
-    final data = localStorage.entries.firstWhere(
+    final data = localStorage.entries.firstWhereOrNull(
       (i) => i.key == fileName,
-      orElse: () => null,
     );
     if (data != null) {
       _data = json.decode(data.value) as Map<String, dynamic>;

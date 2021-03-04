@@ -11,7 +11,8 @@ import '../impl.dart';
 class DirUtils implements LocalStorageImpl {
   DirUtils(this.fileName, [this.path]);
 
-  final String path, fileName;
+  final String fileName;
+  final String? path;
 
   Map<String, dynamic> _data = Map();
 
@@ -21,18 +22,18 @@ class DirUtils implements LocalStorageImpl {
   StreamController<Map<String, dynamic>> storage =
       StreamController<Map<String, dynamic>>();
 
-  RandomAccessFile _file;
+  RandomAccessFile? _file;
 
   @override
   Future<void> clear() async {
     _data.clear();
-    storage.add(null);
+    storage.add({});
   }
 
   @override
   void dispose() {
     storage.close();
-    _file.close();
+    _file!.close();
   }
 
   @override
@@ -45,10 +46,10 @@ class DirUtils implements LocalStorageImpl {
     final serialized = json.encode(data ?? _data);
     final buffer = utf8.encode(serialized);
 
-    _file = await _file.lock();
-    _file = await _file.setPosition(0);
-    _file = await _file.writeFrom(buffer);
-    _file = await _file.truncate(buffer.length);
+    _file = await _file!.lock();
+    _file = await _file!.setPosition(0);
+    _file = await _file!.writeFrom(buffer);
+    _file = await _file!.truncate(buffer.length);
   }
 
   @override
@@ -57,10 +58,10 @@ class DirUtils implements LocalStorageImpl {
   }
 
   @override
-  Future<void> init([Map<String, dynamic> initialData]) async {
+  Future<void> init([Map<String, dynamic>? initialData]) async {
     _data = initialData ?? {};
 
-    final f = await _getFile();
+    final f = await (_getFile() as FutureOr<RandomAccessFile>);
     final length = await f.length();
 
     if (length == 0) {
@@ -81,7 +82,7 @@ class DirUtils implements LocalStorageImpl {
   }
 
   Future<void> _readFile() async {
-    RandomAccessFile _file = await _getFile();
+    RandomAccessFile _file = await (_getFile() as FutureOr<RandomAccessFile>);
     final length = await _file.length();
     _file = await _file.setPosition(0);
     final buffer = new Uint8List(length);
@@ -92,7 +93,7 @@ class DirUtils implements LocalStorageImpl {
     storage.add(_data);
   }
 
-  Future<RandomAccessFile> _getFile() async {
+  Future<RandomAccessFile?> _getFile() async {
     if (_file != null) {
       return _file;
     }

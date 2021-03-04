@@ -47,7 +47,7 @@ class TodoList {
   List<TodoItem> items;
 
   TodoList() {
-    items = new List();
+    items = [];
   }
 
   toJSONEncodable() {
